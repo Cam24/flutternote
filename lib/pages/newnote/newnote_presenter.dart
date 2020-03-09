@@ -1,14 +1,12 @@
 import 'package:flutterapp03/data/database_helper.dart';
 import 'package:flutterapp03/data/model/note.dart';
 
+import '../../data/model/note.dart';
+
 abstract class NewNotePresenterListener {
-  void onNewNoteSuccess();
+  void onNewNoteSuccess(Note note);
 
   void onNewNoteError();
-
-  void onNoteLoaded(List<Note> notes);
-
-  void onNoteLoadError();
 }
 
 abstract class LoadNotePresenterListener {
@@ -26,7 +24,7 @@ class NewNotePresenter {
   addNewNote(Note note) {
     databaseHelper
         .addNote(note)
-        .then((note) => _listener.onNewNoteSuccess())
+        .then((note) => _listener.onNewNoteSuccess(note))
         .catchError((error) => _listener.onNewNoteError());
   }
 

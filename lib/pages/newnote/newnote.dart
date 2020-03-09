@@ -1,8 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_redux/flutter_redux.dart';
 import 'package:flutterapp03/data/model/note.dart';
 import 'package:flutterapp03/pages/newnote/newnote_presenter.dart';
+import 'package:flutterapp03/redux/note/note_action.dart';
+import 'package:redux/redux.dart';
 import 'package:uuid/uuid.dart';
+
+import '../../redux/app_state.dart';
 
 class NewNotePage extends StatefulWidget {
   final String title;
@@ -70,7 +75,8 @@ class NewNotePageState extends State<NewNotePage>
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(40))),
         onPressed: () {
-          Note note = new Note(Uuid().v4(), "Note1", "Hello");
+          Note note = new Note(
+              Uuid().v4(), titleController.text, contentController.text);
           newNotePresenter.addNewNote(note);
         },
       ),
@@ -90,8 +96,10 @@ class NewNotePageState extends State<NewNotePage>
   }
 
   @override
-  void onNewNoteSuccess() {
-
+  void onNewNoteSuccess(Note note) {
+    Store store = StoreProvider.of<AppState>(context);
+    store.dispatch(NewNoteAction(note));
+    Navigator.pop(context);
   }
 
   @override

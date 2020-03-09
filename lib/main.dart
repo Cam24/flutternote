@@ -3,21 +3,27 @@ import 'package:flutter_redux/flutter_redux.dart';
 import 'package:flutterapp03/data/model/note.dart';
 import 'package:flutterapp03/pages/newnote/newnote.dart';
 import 'package:flutterapp03/pages/newnote/newnote_presenter.dart';
+import 'package:flutterapp03/redux/note/note_action.dart';
 import 'package:redux/redux.dart';
+import 'data/model/note.dart';
+import 'redux/app_reducer.dart';
+import 'redux/app_state.dart';
+import 'redux/app_state.dart';
+import 'redux/app_state.dart';
 import 'redux/reduxTheme.dart';
 
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  final Store<ThemeData> store =
-      new Store<ThemeData>(themeChangeReducer, initialState: ThemeData.light());
+  final Store<AppState> store =
+      new Store<AppState>(appReducer, initialState: AppState.init());
 
   @override
   Widget build(BuildContext context) {
     return new StoreProvider(
       store: store,
-      child: StoreConnector<ThemeData, ThemeData>(
-        converter: (store) => store.state,
+      child: StoreConnector<AppState, ThemeData>(
+        converter: (store) => store.state.themeData,
         builder: (context, themeData) {
           return MaterialApp(
             title: 'Flutter Demo',
@@ -43,7 +49,6 @@ class FirstPage extends StatefulWidget {
 
 class FirstPageState extends State<FirstPage>
     implements LoadNotePresenterListener {
-  List<Note> noteList = new List<Note>();
   NewNotePresenter newNotePresenter;
 
   FirstPageState() {
@@ -66,7 +71,7 @@ class FirstPageState extends State<FirstPage>
       appBar: AppBar(
         title: Text(widget.title),
         actions: <Widget>[
-          new StoreConnector<ThemeData, VoidCallback>(
+          new StoreConnector<AppState, VoidCallback>(
             converter: (store) {
               return () {
                 print("click");
@@ -83,13 +88,20 @@ class FirstPageState extends State<FirstPage>
         ],
       ),
       body: Container(
-        child: GridView.builder(
-          gridDelegate:
-              SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
-          itemBuilder: (context, index) {
-            return NoteItem(noteList[index]);
+        child: StoreConnector<AppState, List<Note>>(
+          converter: (store) {
+            return store.state.notes;
           },
-          itemCount: noteList.length,
+          builder: (context, List<Note> notes) {
+            return GridView.builder(
+              gridDelegate:
+                  SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+              itemBuilder: (context, index) {
+                return NoteItem(notes[index]);
+              },
+              itemCount: notes.length,
+            );
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -107,14 +119,18 @@ class FirstPageState extends State<FirstPage>
 
   @override
   void onNoteLoadError() {
-    // TODO: implement onNoteLoadError
+    print("onNoteLoadError");
   }
 
   @override
   void onNoteLoaded(List<Note> notes) {
-    setState(() {
-      noteList = notes;
-    });
+    print("onNoteLoaded" + notes.length.toString());
+    try {
+      Store store = StoreProvider.of<AppState>(context,listen: true);
+      store.dispatch(NoteLoaded(notes));
+    } on Exception catch (ex) {
+      print("error:" + ex.toString());
+    }
   }
 }
 
